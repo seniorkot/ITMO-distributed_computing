@@ -12,3 +12,4 @@ $(TARGET): $(BUILD)
 
 clean:
 	rm -f *.o
+	

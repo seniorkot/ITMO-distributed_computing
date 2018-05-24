@@ -4,9 +4,14 @@
  * @date     May, 2018
  */
  
+#include <stdio.h>
 #include <string.h>
-#include <sys/types>
+#include <stdlib.h>
+#include <sys/types.h>
 #include <unistd.h>
+
+#include "pa1.h"
+#include "ipc.h"
 
 #define PARENT_ID 0
 
@@ -30,12 +35,12 @@ int main(int argc, char** argv){
 		case 3:
 			proc_count = get_proc_count(argv);
 			if (proc_count == -1){
-				fprintf(stderr, "Usage: %s -p X", argv[0]);
+				fprintf(stderr, "Usage: %s -p X\n", argv[0]);
 				return -1;
 			}
 			break;
 		default:
-			fprintf(stderr, "Usage: %s -p X", argv[0]);
+			fprintf(stderr, "Usage: %s -p X\n", argv[0]);
 			return -1;
 	}
 	

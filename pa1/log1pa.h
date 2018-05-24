@@ -8,7 +8,9 @@
 #pragma once
 
 #include <stdio.h>
-#include <process.h>
+#include <sys/types.h>
+#include <unistd.h>
+
 #include "common.h"
 #include "ipc.h"
 #include "pa1.h"
