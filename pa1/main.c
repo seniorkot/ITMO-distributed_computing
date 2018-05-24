@@ -9,13 +9,19 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <time.h>
+#include <sys/wait.h>
 
 #include "pa1.h"
 #include "ipc.h"
 #include "log1pa.h"
 #include "communication.h"
 
+#define BUFFER_SIZE 512
+
 int get_proc_count(char** argv);
+int send_msg(PipesCommunication* comm, MessageType type);
+int recieve_msgs(PipesCommunication* comm, MessageType type);
 
 /**
  * @return -1 on invalid arguments, -2 on fork error, 0 on success
@@ -61,7 +67,7 @@ int main(int argc, char** argv){
 		if (fork_id < 0){
 			return -2;
 		}
-		else if (fork_id){
+		else if (fork_id == 0){
 			free(children);
 			break;
 		}
@@ -69,15 +75,35 @@ int main(int argc, char** argv){
 	}
 	
 	/* Set current process id */
-	if (fork_id != 0){
+	if (fork_id == 0){
 		current_proc_id = i + 1;
 	}
 	else{
 		current_proc_id = PARENT_ID;
 	}
 	
+	/* Set pipe fds to process params */
 	comm = communication_init(pipes, proc_count + 1, current_proc_id);
 	log_pipes(comm);
+	
+	/* Send & recieve started message */
+	if (current_proc_id != PARENT_ID){
+		send_msg(comm, STARTED);
+	}
+	recieve_msgs(comm, STARTED);
+	
+	/* Send & recieve done message */
+	if (current_proc_id != PARENT_ID){
+		send_msg(comm, DONE);
+	}
+	recieve_msgs(comm, DONE);
+	
+	/* Waiting for all children if parent process */
+	if (current_proc_id == PARENT_ID){
+		for (i = 0; i < proc_count; i++){
+			waitpid(children[i], NULL, 0);
+		}
+	}
 	
 	log_destroy();
 	communication_destroy(comm);
@@ -95,4 +121,60 @@ int get_proc_count(char** argv){
 		return atoi(argv[2]);
 	}
 	return -1;
+}
+
+int send_msg(PipesCommunication* comm, MessageType type){
+	Message msg;
+	uint16_t length = 0;
+	char buf[BUFFER_SIZE];
+    msg.s_header.s_magic = MESSAGE_MAGIC;
+    msg.s_header.s_type = type;
+    msg.s_header.s_local_time = time(NULL);
+	
+	type == STARTED ? log_started(comm->current_id) : log_done(comm->current_id);
+	
+	if (type == STARTED){
+		length = snprintf(buf, BUFFER_SIZE, log_started_fmt, comm->current_id, getpid(), getppid());
+	}
+	else if (type == DONE){
+		length = snprintf(buf, BUFFER_SIZE, log_done_fmt, comm->current_id);		
+	}
+	
+	if (length <= 0){
+		return -1;
+	}
+	msg.s_header.s_payload_len = length;
+    memcpy(msg.s_payload, buf, sizeof(char) * length);
+	
+	send_multicast(comm, &msg);
+	return 0;
+}
+
+int recieve_msgs(PipesCommunication* comm, MessageType type){
+	Message msg;
+	local_id i;
+	int ret_code;
+	
+	for (i = 1; i < comm->total_ids; i++){
+		if (i == comm->current_id){
+			continue;
+		}
+		
+		ret_code = receive(comm, i, &msg);
+		if (ret_code != 0){
+			return -1;
+		}
+	}
+	switch (type)
+    {
+        case STARTED:
+            log_received_all_started(comm->current_id);
+            break;
+        case DONE:
+            log_received_all_done(comm->current_id);
+            break;
+		default:
+			break;
+    }
+	return 0;
 }

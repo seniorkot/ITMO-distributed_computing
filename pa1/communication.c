@@ -48,7 +48,7 @@ PipesCommunication* communication_init(int* pipes, size_t proc_count, local_id c
 	PipesCommunication* this = malloc(sizeof(PipesCommunication));;
 	size_t i, j;
 	size_t offset = proc_count - 1;
-	this->pipes = malloc(sizeof(int) * (proc_count-1) * 2);
+	this->pipes = malloc(sizeof(int) * offset * 2);
 	this->total_ids = proc_count;
 	this->current_id = curr_proc;
 	
