@@ -12,8 +12,8 @@
 
 #include "pa1.h"
 #include "ipc.h"
-
-#define PARENT_ID 0
+#include "log1pa.h"
+#include "communication.h"
 
 int get_proc_count(char** argv);
 
@@ -26,26 +26,34 @@ int main(int argc, char** argv){
 	local_id current_proc_id;
 	pid_t fork_id;
 	pid_t* children;
+	int* pipes;
+	PipesCommunication* comm;
 	
 	/* Resolving program arguments */
 	switch(argc){
 		case 1:
-			proc_count = 0; /* TODO: set new default value */
+			proc_count = 1; /* TODO: set new default value */
 			break;
 		case 3:
 			proc_count = get_proc_count(argv);
-			if (proc_count == -1){
-				fprintf(stderr, "Usage: %s -p X\n", argv[0]);
+			if (proc_count <= 0 || proc_count > MAX_PROCESS_ID + 1){
+				fprintf(stderr, "Usage: %s -p (1-16)\n", argv[0]);
 				return -1;
 			}
 			break;
 		default:
-			fprintf(stderr, "Usage: %s -p X\n", argv[0]);
+			fprintf(stderr, "Usage: %s -p (1-16)\n", argv[0]);
 			return -1;
 	}
 	
+	/* Initialize log files */
+	log_init();
+	
 	/* Allocate memory for children */
 	children = malloc(sizeof(pid_t) * proc_count);
+	
+	/* Open pipes for all processes */
+	pipes = pipes_init(proc_count + 1);
 	
 	/* Create children processes */
 	for (i = 0; i < proc_count; i++){
@@ -60,12 +68,20 @@ int main(int argc, char** argv){
 		children[i] = fork_id;
 	}
 	
-	if (!fork_id){
+	/* Set current process id */
+	if (fork_id != 0){
 		current_proc_id = i + 1;
 	}
 	else{
 		current_proc_id = PARENT_ID;
 	}
+	
+	comm = communication_init(pipes, proc_count + 1, current_proc_id);
+	log_pipes(comm);
+	
+	log_destroy();
+	communication_destroy(comm);
+	return 0;
 }
 
 /** Get process count from command line arguments.

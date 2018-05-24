@@ -8,12 +8,12 @@
 #pragma once
 
 #include <stdio.h>
-#include <sys/types.h>
 #include <unistd.h>
 
 #include "common.h"
 #include "ipc.h"
 #include "pa1.h"
+#include "communication.h"
 
 FILE* pipes_log_f;
 FILE* events_log_f;
@@ -24,3 +24,4 @@ void log_received_all_started(local_id id);
 void log_done(local_id id);
 void log_received_all_done(local_id id);
 void log_destroy();
+void log_pipes(PipesCommunication* comm);

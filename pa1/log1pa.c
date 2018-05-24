@@ -35,3 +35,19 @@ void log_destroy(){
 	fclose(pipes_log_f);
     fclose(events_log_f);
 }
+
+void log_pipes(PipesCommunication* comm){
+	size_t i;
+	
+	fprintf(pipes_log_f, "Process %d pipes:\n", comm->current_id);
+	
+	for (i = 0; i < comm->total_ids; i++){
+		if (i == comm->current_id){
+			continue;
+		}
+		
+		fprintf(pipes_log_f, "P%ld|R%d|W%d ", i, comm->pipes[(i < comm->current_id ? i : i-1) * 2 + PIPE_READ_TYPE], 
+			comm->pipes[(i < comm->current_id ? i : i-1) * 2 + PIPE_WRITE_TYPE]);
+	}
+	fprintf(pipes_log_f, "\n");
+}
