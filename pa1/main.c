@@ -1,6 +1,6 @@
 /**
  * @file     main.c
- * @Author   Oleg Ivanko (@seniorkot) & Martin Rayla
+ * @Author   @seniorkot
  * @date     May, 2018
  */
  
@@ -123,6 +123,13 @@ int get_proc_count(char** argv){
 	return -1;
 }
 
+/** Send message to all other processes
+ *
+ * @param comm		Pointer to PipesCommunication
+ * @param type		Message type: STARTED / DONE
+ *
+ * @return -1 on incorrect type, -2 on internal error, -3 on sending message error, 0 on success.
+ */
 int send_msg(PipesCommunication* comm, MessageType type){
 	Message* msg = malloc(sizeof(Message));
 	uint16_t length = 0;
@@ -133,40 +140,47 @@ int send_msg(PipesCommunication* comm, MessageType type){
 	
 	type == STARTED ? log_started(comm->current_id) : log_done(comm->current_id);
 	
-	if (type == STARTED){
-		length = snprintf(buf, BUFFER_SIZE, log_started_fmt, comm->current_id, getpid(), getppid());
-	}
-	else if (type == DONE){
-		length = snprintf(buf, BUFFER_SIZE, log_done_fmt, comm->current_id);		
+	switch (type){
+        case STARTED:
+			length = snprintf(buf, BUFFER_SIZE, log_started_fmt, comm->current_id, getpid(), getppid());
+			break;
+		case DONE:
+			length = snprintf(buf, BUFFER_SIZE, log_done_fmt, comm->current_id);
+			break;
+		default:
+			return -1;
 	}
 	
 	if (length <= 0){
-		return -1;
+		return -2;
 	}
+	
 	msg->s_header.s_payload_len = length;
     memcpy(msg->s_payload, buf, sizeof(char) * length);
 	
-	send_multicast(comm, msg);
+	if(send_multicast(comm, msg)){
+		return -3;
+	}
+	
+	free(msg);
 	return 0;
 }
 
+/** Receive messages from other processes
+ *
+ * @param comm		Pointer to PipesCommunication
+ * @param type		Message type: STARTED / DONE
+ *
+ * @return -1 on recieving message error, 0 on success.
+ */
 int recieve_msgs(PipesCommunication* comm, MessageType type){
 	Message* msg = malloc(sizeof(Message));
-	local_id i;
-	int ret_code;
 	
-	for (i = 1; i < comm->total_ids; i++){
-		if (i == comm->current_id){
-			continue;
-		}
-		
-		ret_code = receive(comm, i, msg);
-		if (ret_code != 0){
-			return -1;
-		}
+	if (receive_any(comm, msg)){
+		return -1;
 	}
-	switch (type)
-    {
+	
+	switch (type){
         case STARTED:
             log_received_all_started(comm->current_id);
             break;
@@ -176,5 +190,6 @@ int recieve_msgs(PipesCommunication* comm, MessageType type){
 		default:
 			break;
     }
+	free(msg);
 	return 0;
 }

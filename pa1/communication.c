@@ -1,6 +1,6 @@
 /**
  * @file     communication.c
- * @Author   Oleg Ivanko (@seniorkot) & Martin Rayla
+ * @Author   @seniorkot
  * @date     May, 2018
  * @brief    Functions that help to organize IPC
  */
@@ -11,7 +11,7 @@
  * 
  * @param proc_count    Process count including parent process.
  *
- * @return pointer to PipesCommunication
+ * @return pointer to pipe fds array
  */
 int* pipes_init(size_t proc_count){
 	size_t i, j;

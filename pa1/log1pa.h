@@ -1,6 +1,6 @@
 /**
  * @file     log1pa.h
- * @Author   Oleg Ivanko (@seniorkot) & Martin Rayla
+ * @Author   @seniorkot
  * @date     May, 2018
  * @brief    Header file for logger functions
  */

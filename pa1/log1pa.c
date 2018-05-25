@@ -1,6 +1,6 @@
 /**
  * @file     log1pa.c
- * @Author   Oleg Ivanko (@seniorkot) & Martin Rayla
+ * @Author   @seniorkot
  * @date     May, 2018
  * @brief    Logger functions
  */

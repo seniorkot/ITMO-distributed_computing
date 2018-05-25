@@ -1,6 +1,6 @@
 /**
  * @file     ipc.c
- * @Author   Oleg Ivanko (@seniorkot) & Martin Rayla
+ * @Author   @seniorkot
  * @date     May, 2018
  * @brief    IPC functions
  */
@@ -27,14 +27,14 @@ int send(void * self, local_id dst, const Message * msg){
 
 int send_multicast(void * self, const Message * msg){
 	PipesCommunication* from = (PipesCommunication*) self;
-	size_t i;
+	local_id i;
 	
 	for (i = 0; i < from->total_ids; i++){
 		if (i == from->current_id){
 			continue;
 		}
-		if (write(from->pipes[GET_INDEX(i, from->current_id) * 2 + PIPE_WRITE_TYPE], msg, sizeof(MessageHeader) + msg->s_header.s_payload_len) < 0){
-			return -2;
+		if (send(from, i, msg) < 0){
+			return -1;
 		}
 	}
 	return 0;
@@ -59,5 +59,17 @@ int receive(void * self, local_id from, Message * msg){
 }
 
 int receive_any(void * self, Message * msg){
+	PipesCommunication* this = (PipesCommunication*) self;
+	local_id i;
+	
+	for (i = 1; i < this->total_ids; i++){
+		if (i == this->current_id){
+			continue;
+		}
+		
+		if (receive(this, i, msg) != 0){
+			return -1;
+		}
+	}
 	return 0;
 }
