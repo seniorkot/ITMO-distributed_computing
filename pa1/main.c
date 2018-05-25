@@ -124,12 +124,12 @@ int get_proc_count(char** argv){
 }
 
 int send_msg(PipesCommunication* comm, MessageType type){
-	Message msg;
+	Message* msg = malloc(sizeof(Message));
 	uint16_t length = 0;
 	char buf[BUFFER_SIZE];
-    msg.s_header.s_magic = MESSAGE_MAGIC;
-    msg.s_header.s_type = type;
-    msg.s_header.s_local_time = time(NULL);
+    msg->s_header.s_magic = MESSAGE_MAGIC;
+    msg->s_header.s_type = type;
+    msg->s_header.s_local_time = time(NULL);
 	
 	type == STARTED ? log_started(comm->current_id) : log_done(comm->current_id);
 	
@@ -143,15 +143,15 @@ int send_msg(PipesCommunication* comm, MessageType type){
 	if (length <= 0){
 		return -1;
 	}
-	msg.s_header.s_payload_len = length;
-    memcpy(msg.s_payload, buf, sizeof(char) * length);
+	msg->s_header.s_payload_len = length;
+    memcpy(msg->s_payload, buf, sizeof(char) * length);
 	
-	send_multicast(comm, &msg);
+	send_multicast(comm, msg);
 	return 0;
 }
 
 int recieve_msgs(PipesCommunication* comm, MessageType type){
-	Message msg;
+	Message* msg = malloc(sizeof(Message));
 	local_id i;
 	int ret_code;
 	
@@ -160,7 +160,7 @@ int recieve_msgs(PipesCommunication* comm, MessageType type){
 			continue;
 		}
 		
-		ret_code = receive(comm, i, &msg);
+		ret_code = receive(comm, i, msg);
 		if (ret_code != 0){
 			return -1;
 		}

@@ -30,7 +30,7 @@ int* pipes_init(size_t proc_count){
 				return (int*)NULL;
 			}
 			pipes[i * offset * 2 + (i > j ? j : j - 1) * 2 + PIPE_READ_TYPE] = tmp_fd[0];  /* READ */
-			pipes[i * offset * 2 + (i > j ? j : j - 1) * 2 + PIPE_WRITE_TYPE] = tmp_fd[1]; /* WRITE */
+			pipes[j * offset * 2 + (j > i ? i : i - 1) * 2 + PIPE_WRITE_TYPE] = tmp_fd[1]; /* WRITE */
 		}
 	}
 	return pipes;
