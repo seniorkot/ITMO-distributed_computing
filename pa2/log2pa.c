@@ -7,6 +7,9 @@
  
 #include "log1pa.h"
 
+FILE* pipes_log_f;
+FILE* events_log_f;
+
 void log_init(){
 	pipes_log_f = fopen(pipes_log, "w");
 	events_log_f = fopen(events_log, "w");

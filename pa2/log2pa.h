@@ -15,9 +15,6 @@
 #include "pa2345.h"
 #include "communication.h"
 
-FILE* pipes_log_f;
-FILE* events_log_f;
-
 void log_init();
 void log_destroy();
 

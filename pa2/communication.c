@@ -7,6 +7,24 @@
  
 #include "communication.h"
 
+/** Set 0_NONBLOCK flag to fd
+ * 
+ * @param fd			File Descriptor
+ *
+ * @return -1 if can't get flags, -2 if can't set flags, 0 on success
+ */
+int set_nonblock(int pipe_id){
+	int flags = fcntl(pipe_id, F_GETFL);
+    if (flags == -1){
+        return -1;
+    }
+    flags = fcntl(pipe_id, F_SETFL, flags | O_NONBLOCK);
+    if (flags == -1){
+        return -2;
+    }
+    return 0;
+}
+
 /** Open pipes fds
  * 
  * @param proc_count    Process count including parent process.
@@ -27,6 +45,10 @@ int* pipes_init(size_t proc_count){
 			}
 			
 			if (pipe(tmp_fd) < 0){
+				return (int*)NULL;
+			}
+			
+			if (set_nonblock(tmp_fd[0]) || set_nonblock(tmp_fd[1])){
 				return (int*)NULL;
 			}
 			pipes[i * offset * 2 + (i > j ? j : j - 1) * 2 + PIPE_READ_TYPE] = tmp_fd[0];  /* READ */

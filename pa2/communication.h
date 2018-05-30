@@ -12,11 +12,13 @@
 #include <string.h>
 
 #include "ipc.h"
+#include "balance.h"
 
 typedef struct{
 	int* pipes;
 	local_id current_id;
 	size_t total_ids;
+	balance_t balance;
 } PipesCommunication;
 
 enum PipeTypeOffset 
