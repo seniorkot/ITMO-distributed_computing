@@ -28,5 +28,10 @@ enum PipeTypeOffset
 };
 
 int* pipes_init(size_t proc_count);
-PipesCommunication* communication_init(int* pipes, size_t proc_count, local_id curr_proc);
+PipesCommunication* communication_init(int* pipes, size_t proc_count, local_id curr_proc, balance_t balance);
 void communication_destroy(PipesCommunication* comm);
+
+int send_all_proc_event_msg(PipesCommunication* comm, MessageType type);
+int send_all_stop_msg(PipesCommunication* comm);
+int send_transfer_msg(PipesCommunication* comm, local_id dst, TransferOrder* order);
+int send_ack_msg(PipesCommunication* comm, local_id dst);

@@ -36,22 +36,32 @@ void log_pipes(PipesCommunication* comm){
 	fprintf(pipes_log_f, "\n");
 }
 
-void log_started(local_id id){
-	printf(log_started_fmt, id, getpid(), getppid());
-    fprintf(events_log_f, log_started_fmt, id, getpid(), getppid());
+void log_started(local_id id, balance_t balance){
+	printf(log_started_fmt, get_physical_time(), id, getpid(), getppid(), balance);
+    fprintf(events_log_f, log_started_fmt, get_physical_time(), id, getpid(), getppid(), balance);
 }
 
 void log_received_all_started(local_id id){
-	printf(log_received_all_started_fmt, id);
-    fprintf(events_log_f, log_received_all_started_fmt, id);
+	printf(log_received_all_started_fmt, get_physical_time(), id);
+    fprintf(events_log_f, log_received_all_started_fmt, get_physical_time(), id);
 }
 
-void log_done(local_id id){
-	printf(log_done_fmt, id);
-    fprintf(events_log_f, log_done_fmt, id);
+void log_done(local_id id, balance_t balance){
+	printf(log_done_fmt, get_physical_time(), id, balance);
+    fprintf(events_log_f, log_done_fmt, get_physical_time(), id, balance);
 }
 
 void log_received_all_done(local_id id){
-	printf(log_received_all_done_fmt, id);
-    fprintf(events_log_f, log_received_all_done_fmt, id);
+	printf(log_received_all_done_fmt, get_physical_time(), id);
+    fprintf(events_log_f, log_received_all_done_fmt, get_physical_time(), id);
+}
+
+void log_transfer_out(local_id from, local_id dst, balance_t amount){
+	printf(log_transfer_out_fmt, get_physical_time(), from, amount, dst);
+	fprintf(events_log_f, log_transfer_out_fmt, get_physical_time(), from, amount, dst);
+}
+
+void log_transfer_in(local_id from, local_id dst, balance_t amount){
+	printf(log_transfer_in_fmt, get_physical_time(), dst, amount, from);
+	fprintf(events_log_f, log_transfer_in_fmt, get_physical_time(), dst, amount, from);
 }

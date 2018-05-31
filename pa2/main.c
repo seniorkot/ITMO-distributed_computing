@@ -14,8 +14,13 @@
 
 #include "log2pa.h"
 #include "communication.h"
+#include "banking.h"
 
 int get_proc_count(int argc, char** argv);
+balance_t get_proc_balance(local_id proc_id, char** argv);
+
+void do_parent_work(PipesCommunication* comm);
+void do_child_work(PipesCommunication* comm);
 
 /**
  * @return -1 on invalid arguments, -2 on fork error, 0 on success
@@ -27,6 +32,7 @@ int main(int argc, char** argv){
 	pid_t* children;
 	pid_t fork_id;
 	local_id current_proc_id;
+	PipesCommunication* comm;
 	
 	/* Check args */
 	if (argc < 4 || (proc_count = get_proc_count(argv)) == -1){
@@ -65,10 +71,16 @@ int main(int argc, char** argv){
 	}
 	
 	/* Set pipe fds to process params */
-	comm = communication_init(pipes, proc_count + 1, current_proc_id);
+	comm = communication_init(pipes, proc_count + 1, current_proc_id, get_proc_balance(argv, current_proc_id));
 	log_pipes(comm);
 	
-	/* TODO: PROCESS WORK */
+	/* Do process work */
+	if (current_proc_id == PARENT_ID){
+		do_parent_work(comm);
+	}
+	else{
+		do_child_work(comm);
+	}
 	
 	/* Waiting for all children if parent process */
 	if (current_proc_id == PARENT_ID){
@@ -80,6 +92,14 @@ int main(int argc, char** argv){
 	log_destroy();
 	communication_destroy(comm);
 	return 0;
+}
+
+void do_parent_work(PipesCommunication* comm){
+	
+}
+
+void do_child_work(PipesCommunication* comm){
+	
 }
 
 /** Get process count from command line arguments.
@@ -95,4 +115,15 @@ size_t get_proc_count(int argc, char** argv){
 		return proc_count;
 	}
 	return -1;
+}
+
+/** Get process balance from command line arguments.
+ *
+ * @param proc_id	Process local id
+ * @param argv		Double char array containing command line arguments.
+ *
+ * @return process balance
+ */
+balance_t get_proc_balance(local_id proc_id, char** argv){
+	return atoi(argv[proc_id + 2);
 }

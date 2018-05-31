@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#include "banking.h"
 #include "common.h"
 #include "ipc.h"
 #include "pa2345.h"
@@ -20,8 +21,10 @@ void log_destroy();
 
 void log_pipes(PipesCommunication* comm);
 
-/* TODO: Rewrite for 2nd lab */
-void log_started(local_id id);
+void log_started(local_id id, balance_t balance);
 void log_received_all_started(local_id id);
-void log_done(local_id id);
+void log_done(local_id id, balance_t balance);
 void log_received_all_done(local_id id);
+
+void log_transfer_out(local_id from, local_id dst, balance_t amount);
+void log_transfer_in(local_id from, local_id dst, balance_t amount);
