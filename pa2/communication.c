@@ -6,6 +6,7 @@
  */
  
 #include "communication.h"
+#include "log2pa.h"
 
 #define BUFFER_SIZE 512
 
@@ -212,6 +213,31 @@ int send_ack_msg(PipesCommunication* comm, local_id dst){
     msg->s_header.s_type = ACK;
     msg->s_header.s_local_time = get_physical_time();
 	msg->s_header.s_payload_len = 0;
+	
+	if (send(comm, dst, msg)){
+		free(msg);
+		return -1;
+	}
+	free(msg);
+	return 0;
+}
+
+/** Send Balance History
+ * 
+ * @param comm		Pointer to PipesCommunication
+ * @param dst 		Destination local_id
+ * @param history	Balance History information
+ *
+ * @return -1 on sending message error, 0 on success
+ */
+int send_balance_history(PipesCommunication* comm, local_id dst, BalanceHistory* history){
+	Message* msg = malloc(sizeof(Message));
+	msg->s_header.s_magic = MESSAGE_MAGIC;
+    msg->s_header.s_type = BALANCE_HISTORY;
+    msg->s_header.s_local_time = get_physical_time();
+	msg->s_header.s_payload_len = sizeof(BalanceHistory);
+	
+	memcpy(msg->s_payload, history, msg->s_header.s_payload_len);
 	
 	if (send(comm, dst, msg)){
 		free(msg);

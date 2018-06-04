@@ -1,11 +1,11 @@
 COMP=clang
 TARGET=pa2
-CFLAGS=-std=c99 -Wall -pedantic -L. -lruntime
+CFLAGS=-std=c99 -Wall -pedantic
 SRC=$(wildcard *.c)
 BUILD=$(SRC:%.c=%.o)
 
 $(TARGET): $(BUILD)
-	$(COMP) $(CFLAGS) $(BUILD) -o $(TARGET)
+	$(COMP) $(CFLAGS) -L./lib64 -lruntime $(BUILD) -o $(TARGET)
 
 %.o: %.c
 	$(COMP) -c -o $@ $(CFLAGS) $^

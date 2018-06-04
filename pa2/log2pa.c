@@ -5,7 +5,7 @@
  * @brief    Logger functions
  */
  
-#include "log1pa.h"
+#include "log2pa.h"
 
 FILE* pipes_log_f;
 FILE* events_log_f;

@@ -9,6 +9,7 @@
  
 #include "banking.h"
 #include "communication.h"
+#include "log2pa.h"
 
 void transfer(void * parent_data, local_id src, local_id dst, balance_t amount){
 	PipesCommunication* parent = (PipesCommunication*) parent_data;
@@ -17,14 +18,15 @@ void transfer(void * parent_data, local_id src, local_id dst, balance_t amount){
     order->s_dst = dst;
     order->s_amount = amount;
 	
-	int send_transfer_msg(parent, dst, order);
+	send_transfer_msg(parent, dst, order);
 	log_transfer_out(src, dst, amount);
 	
 	Message* msg = malloc(sizeof(Message));
 	
-	while (receive(comm, dst, &msg) <= 0);
+	while (receive(parent, dst, msg) <= 0);
 	
 	if (msg->s_header.s_type == ACK){
 		log_transfer_in(src, dst, amount);		
 	}
+	free(msg);
 }

@@ -5,14 +5,17 @@
  * @brief    Header file that contains structure and functions to organize IPC
  */
 
-#pragma once
+#ifndef __IFMO_DISTRIBUTED_CLASS_COMMUNICATION__H
+#define __IFMO_DISTRIBUTED_CLASS_COMMUNICATION__H
 
+#include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <fcntl.h>
 
 #include "ipc.h"
-#include "balance.h"
+#include "banking.h"
 
 typedef struct{
 	int* pipes;
@@ -35,5 +38,8 @@ int send_all_proc_event_msg(PipesCommunication* comm, MessageType type);
 int send_all_stop_msg(PipesCommunication* comm);
 int send_transfer_msg(PipesCommunication* comm, local_id dst, TransferOrder* order);
 int send_ack_msg(PipesCommunication* comm, local_id dst);
+int send_balance_history(PipesCommunication* comm, local_id dst, BalanceHistory* history);
 
 int receive_all_msgs(PipesCommunication* comm, MessageType type);
+
+#endif
