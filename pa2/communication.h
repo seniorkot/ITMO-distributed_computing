@@ -35,3 +35,5 @@ int send_all_proc_event_msg(PipesCommunication* comm, MessageType type);
 int send_all_stop_msg(PipesCommunication* comm);
 int send_transfer_msg(PipesCommunication* comm, local_id dst, TransferOrder* order);
 int send_ack_msg(PipesCommunication* comm, local_id dst);
+
+int receive_all_msgs(PipesCommunication* comm, MessageType type);

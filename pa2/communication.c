@@ -174,9 +174,11 @@ int send_all_stop_msg(PipesCommunication* comm){
 	return 0;
 }
 
-/** Send TRANSFER message to all processes
+/** Send TRANSFER message
  * 
  * @param comm		Pointer to PipesCommunication
+ * @param dst 		Destination local_id
+ * @param order 	Transfer Order information
  *
  * @return -1 on sending message error, 0 on success
  */
@@ -197,9 +199,10 @@ int send_transfer_msg(PipesCommunication* comm, local_id dst, TransferOrder* ord
 	return 0;
 }
 
-/** Send ACK message to all processes
+/** Send ACK message
  * 
  * @param comm		Pointer to PipesCommunication
+ * @param dst 		Destination local_id
  *
  * @return -1 on sending message error, 0 on success
  */
@@ -216,4 +219,33 @@ int send_ack_msg(PipesCommunication* comm, local_id dst){
 	}
 	free(msg);
 	return 0;
+}
+
+/** Receive all messages
+ * 
+ * @param comm		Pointer to PipesCommunication
+ * @param type		Message Type
+ *
+ * @return -1 on receiving message error, 0 on success
+ */
+int receive_all_msgs(PipesCommunication* comm, MessageType type){
+	Message* msg = malloc(sizeof(Message));
+	
+	if (receive_any(comm, msg)){
+		return -1;
+	}
+	
+	switch (type){
+        case STARTED:
+            log_received_all_started(comm->current_id);
+            break;
+        case DONE:
+            log_received_all_done(comm->current_id);
+            break;
+		default:
+			break;
+    }
+	free(msg);
+	return 0;
+
 }
