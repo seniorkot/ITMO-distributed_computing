@@ -8,12 +8,6 @@
 #ifndef __IFMO_DISTRIBUTED_CLASS_COMMUNICATION__H
 #define __IFMO_DISTRIBUTED_CLASS_COMMUNICATION__H
 
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-#include <fcntl.h>
-
 #include "ipc.h"
 #include "banking.h"
 

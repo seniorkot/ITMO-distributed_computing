@@ -8,14 +8,10 @@
 #ifndef __IFMO_DISTRIBUTED_CLASS_LOG2PA__H
 #define __IFMO_DISTRIBUTED_CLASS_LOG2PA__H
 
-#include <stdio.h>
-#include <unistd.h>
-
 #include "communication.h"
 #include "banking.h"
-#include "common.h"
 #include "ipc.h"
-#include "pa2345.h"
+
 
 void log_init();
 void log_destroy();

@@ -7,6 +7,13 @@
  
 #include "communication.h"
 #include "log2pa.h"
+#include "pa2345.h"
+
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
+#include <fcntl.h>
 
 /** Set 0_NONBLOCK flag to fd
  * 

@@ -4,8 +4,6 @@
  * @date     May, 2018
  * @brief    Transfer function
  */
-#include <unistd.h>
-#include <stdlib.h>
  
 #include "banking.h"
 #include "communication.h"
@@ -14,12 +12,12 @@
 void transfer(void * parent_data, local_id src, local_id dst, balance_t amount){
 	Message msg;
 	PipesCommunication* parent = (PipesCommunication*) parent_data;
-	TransferOrder* order = malloc(sizeof(TransferOrder));
-	order->s_src = src;
-    order->s_dst = dst;
-    order->s_amount = amount;
+	TransferOrder order;
+	order.s_src = src;
+    order.s_dst = dst;
+    order.s_amount = amount;
 	
-    send_transfer_msg(parent, src, order);
+    send_transfer_msg(parent, src, &order);
 	
 	log_transfer_out(src, dst, amount);
 		

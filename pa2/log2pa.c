@@ -6,6 +6,11 @@
  */
  
 #include "log2pa.h"
+#include "common.h"
+#include "pa2345.h"
+
+#include <stdio.h>
+#include <unistd.h>
 
 FILE* pipes_log_f;
 FILE* events_log_f;

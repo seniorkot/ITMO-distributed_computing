@@ -131,12 +131,12 @@ int get_proc_count(char** argv){
  * @return -1 on incorrect type, -2 on internal error, -3 on sending message error, 0 on success.
  */
 int send_msg(PipesCommunication* comm, MessageType type){
-	Message* msg = malloc(sizeof(Message));
+	Message msg;
 	uint16_t length = 0;
 	char buf[BUFFER_SIZE];
-    msg->s_header.s_magic = MESSAGE_MAGIC;
-    msg->s_header.s_type = type;
-    msg->s_header.s_local_time = time(NULL);
+    msg.s_header.s_magic = MESSAGE_MAGIC;
+    msg.s_header.s_type = type;
+    msg.s_header.s_local_time = time(NULL);
 	
 	type == STARTED ? log_started(comm->current_id) : log_done(comm->current_id);
 	
@@ -155,14 +155,13 @@ int send_msg(PipesCommunication* comm, MessageType type){
 		return -2;
 	}
 	
-	msg->s_header.s_payload_len = length;
-    memcpy(msg->s_payload, buf, sizeof(char) * length);
+	msg.s_header.s_payload_len = length;
+    memcpy(msg.s_payload, buf, sizeof(char) * length);
 	
-	if(send_multicast(comm, msg)){
+	if(send_multicast(comm, &msg)){
 		return -3;
 	}
 	
-	free(msg);
 	return 0;
 }
 
@@ -174,9 +173,9 @@ int send_msg(PipesCommunication* comm, MessageType type){
  * @return -1 on recieving message error, 0 on success.
  */
 int recieve_msgs(PipesCommunication* comm, MessageType type){
-	Message* msg = malloc(sizeof(Message));
+	Message msg;
 	
-	if (receive_any(comm, msg)){
+	if (receive_any(comm, &msg)){
 		return -1;
 	}
 	
@@ -190,6 +189,5 @@ int recieve_msgs(PipesCommunication* comm, MessageType type){
 		default:
 			break;
     }
-	free(msg);
 	return 0;
 }

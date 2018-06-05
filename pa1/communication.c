@@ -7,6 +7,10 @@
  
 #include "communication.h"
 
+#include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
+
 /** Open pipes fds
  * 
  * @param proc_count    Process count including parent process.

@@ -5,11 +5,10 @@
  * @brief    IPC functions
  */
 
-#include <stdio.h>
-#include <unistd.h>
- 
 #include "ipc.h"
 #include "communication.h"
+ 
+#include <unistd.h>
 
 #define GET_INDEX(x, id) ((x) < (id) ? (x) : (x) - 1)
 

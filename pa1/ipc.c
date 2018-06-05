@@ -5,7 +5,6 @@
  * @brief    IPC functions
  */
 
-#include <stdio.h>
 #include <unistd.h>
  
 #include "ipc.h"

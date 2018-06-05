@@ -12,4 +12,6 @@ $(TARGET): $(BUILD)
 
 clean:
 	rm -f *.o
+	rm -f $(TARGET)
+	rm -f *.log
 	
