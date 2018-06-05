@@ -107,14 +107,14 @@ int do_parent_work(PipesCommunication* comm){
 	AllHistory all_history;
 	local_id i;
 	
-	receive_all_msgs(comm, STARTED);
+    receive_all_msgs(comm, STARTED);
 
     /* Payload */
     bank_robbery(comm, comm->total_ids - 1);
 
     send_all_stop_msg(comm);
     receive_all_msgs(comm, DONE);
-	
+
 	all_history.s_history_len = comm->total_ids - 1;
 	
 	/* Receive messages from children and fill in History */
@@ -158,7 +158,7 @@ int do_child_work(PipesCommunication* comm){
 	
 	/* Send & receive STARTED message */
 	send_all_proc_event_msg(comm, STARTED);
-	receive_all_msgs(comm, STARTED);
+    receive_all_msgs(comm, STARTED);
 	
 	/* Receive TRANSFER or STOP messages */
 	while(1){
@@ -173,9 +173,6 @@ int do_child_work(PipesCommunication* comm){
 			send_all_proc_event_msg(comm, DONE);
 			break;
 		}
-		else{
-			return -1;
-		}
 	}
 	
 	/* Receive TRANSFER or DONE messages */
@@ -189,9 +186,6 @@ int do_child_work(PipesCommunication* comm){
 		}
 		else if (msg.s_header.s_type == DONE){
 			done_left--;
-		}
-		else{
-			return -1;
 		}
 	}
 	
@@ -216,10 +210,12 @@ int do_transfer(PipesCommunication* comm, Message* msg, BalanceState* state, Bal
 	if (comm->current_id == order.s_src){
 		update_history(state, history, -order.s_amount);
 		send_transfer_msg(comm, order.s_dst, &order);
+		comm->balance -= order.s_amount;
 	}
 	else if (comm->current_id == order.s_dst){
 		update_history(state, history, order.s_amount);
 		send_ack_msg(comm, PARENT_ID);
+		comm->balance += order.s_amount;
 	}
 	else{
 		return -1;

@@ -33,9 +33,7 @@ int send_multicast(void * self, const Message * msg){
 		if (i == from->current_id){
 			continue;
 		}
-		if (send(from, i, msg) < 0){
-			return -1;
-		}
+		while(send(from, i, msg) < 0);
 	}
 	return 0;
 }
@@ -62,14 +60,14 @@ int receive_any(void * self, Message * msg){
 	PipesCommunication* this = (PipesCommunication*) self;
 	local_id i;
 	
-	for (i = 1; i < this->total_ids; i++){
+	for (i = 0; i < this->total_ids; i++){
 		if (i == this->current_id){
 			continue;
 		}
 		
-		if (receive(this, i, msg) != 0){
-			return -1;
+		if (!receive(this, i, msg)){
+			return 0;
 		}
 	}
-	return 0;
+	return -1;
 }

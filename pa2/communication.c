@@ -123,8 +123,6 @@ int send_all_proc_event_msg(PipesCommunication* comm, MessageType type){
     msg->s_header.s_type = type;
     msg->s_header.s_local_time = get_physical_time();
 	
-	type == STARTED ? log_started(comm->current_id, comm->balance) : log_done(comm->current_id, comm->balance);
-	
 	switch (type){
         case STARTED:
 			length = snprintf(buf, BUFFER_SIZE, log_started_fmt, get_physical_time(), comm->current_id, getpid(), getppid(), comm->balance);
@@ -145,10 +143,9 @@ int send_all_proc_event_msg(PipesCommunication* comm, MessageType type){
 	msg->s_header.s_payload_len = length;
     memcpy(msg->s_payload, buf, sizeof(char) * length);
 	
-	if(send_multicast(comm, msg)){
-		free(msg);
-		return -3;
-	}
+	send_multicast(comm, msg);
+	
+	type == STARTED ? log_started(comm->current_id, comm->balance) : log_done(comm->current_id, comm->balance);
 	
 	free(msg);
 	return 0;
@@ -167,10 +164,8 @@ int send_all_stop_msg(PipesCommunication* comm){
     msg->s_header.s_local_time = get_physical_time();
 	msg->s_header.s_payload_len = 0;
 	
-	if(send_multicast(comm, msg)){
-		free(msg);
-		return -1;
-	}
+	send_multicast(comm, msg);
+	
 	free(msg);
 	return 0;
 }
@@ -192,10 +187,8 @@ int send_transfer_msg(PipesCommunication* comm, local_id dst, TransferOrder* ord
 	
 	memcpy(msg->s_payload, order, msg->s_header.s_payload_len);
 	
-	if (send(comm, dst, msg)){
-		free(msg);
-		return -1;
-	}
+	while (send(comm, dst, msg) < 0);
+	
 	free(msg);
 	return 0;
 }
@@ -214,10 +207,8 @@ int send_ack_msg(PipesCommunication* comm, local_id dst){
     msg->s_header.s_local_time = get_physical_time();
 	msg->s_header.s_payload_len = 0;
 	
-	if (send(comm, dst, msg)){
-		free(msg);
-		return -1;
-	}
+	while (send(comm, dst, msg) < 0);
+	
 	free(msg);
 	return 0;
 }
@@ -239,10 +230,8 @@ int send_balance_history(PipesCommunication* comm, local_id dst, BalanceHistory*
 	
 	memcpy(msg->s_payload, history, msg->s_header.s_payload_len);
 	
-	if (send(comm, dst, msg)){
-		free(msg);
-		return -1;
-	}
+	while (send(comm, dst, msg) < 0);
+	
 	free(msg);
 	return 0;
 }
@@ -256,9 +245,13 @@ int send_balance_history(PipesCommunication* comm, local_id dst, BalanceHistory*
  */
 int receive_all_msgs(PipesCommunication* comm, MessageType type){
 	Message* msg = malloc(sizeof(Message));
+	local_id i;
 	
-	if (receive_any(comm, msg)){
-		return -1;
+	for (i = 1; i < comm->total_ids; i++){
+		if (i == comm->current_id){
+			continue;
+		}
+		while (receive(comm, i, msg) < 0);
 	}
 	
 	switch (type){
