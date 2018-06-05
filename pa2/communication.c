@@ -8,8 +8,6 @@
 #include "communication.h"
 #include "log2pa.h"
 
-#define BUFFER_SIZE 512
-
 /** Set 0_NONBLOCK flag to fd
  * 
  * @param fd			File Descriptor
@@ -115,59 +113,51 @@ void communication_destroy(PipesCommunication* comm){
  * @return -1 on incorrect type, -2 on internal error, -3 on sending message error, 0 on success
  */
 int send_all_proc_event_msg(PipesCommunication* comm, MessageType type){
-	Message* msg = malloc(sizeof(Message));
+	Message msg;
 	uint16_t length = 0;
-	char buf[BUFFER_SIZE];
+	char buf[MAX_PAYLOAD_LEN];
 	
-	msg->s_header.s_magic = MESSAGE_MAGIC;
-    msg->s_header.s_type = type;
-    msg->s_header.s_local_time = get_physical_time();
+	msg.s_header.s_magic = MESSAGE_MAGIC;
+    msg.s_header.s_type = type;
+    msg.s_header.s_local_time = get_physical_time();
 	
 	switch (type){
         case STARTED:
-			length = snprintf(buf, BUFFER_SIZE, log_started_fmt, get_physical_time(), comm->current_id, getpid(), getppid(), comm->balance);
+			length = snprintf(buf, MAX_PAYLOAD_LEN, log_started_fmt, get_physical_time(), comm->current_id, getpid(), getppid(), comm->balance);
 			break;
 		case DONE:
-			length = snprintf(buf, BUFFER_SIZE, log_done_fmt, get_physical_time(), comm->current_id, comm->balance);
+			length = snprintf(buf, MAX_PAYLOAD_LEN, log_done_fmt, get_physical_time(), comm->current_id, comm->balance);
 			break;
 		default:
-			free(msg);
 			return -1;
 	}
 		
 	if (length <= 0){
-		free(msg);
 		return -2;
 	}
 	
-	msg->s_header.s_payload_len = length;
-    memcpy(msg->s_payload, buf, sizeof(char) * length);
+	msg.s_header.s_payload_len = length;
+    memcpy(msg.s_payload, buf, sizeof(char) * length);
 	
-	send_multicast(comm, msg);
+	send_multicast(comm, &msg);
 	
 	type == STARTED ? log_started(comm->current_id, comm->balance) : log_done(comm->current_id, comm->balance);
 	
-	free(msg);
 	return 0;
 }
 
 /** Send STOP message to all processes
  * 
  * @param comm		Pointer to PipesCommunication
- *
- * @return -1 on sending message error, 0 on success
  */
-int send_all_stop_msg(PipesCommunication* comm){
-	Message* msg = malloc(sizeof(Message));
-	msg->s_header.s_magic = MESSAGE_MAGIC;
-    msg->s_header.s_type = STOP;
-    msg->s_header.s_local_time = get_physical_time();
-	msg->s_header.s_payload_len = 0;
+void send_all_stop_msg(PipesCommunication* comm){
+	Message msg;
+	msg.s_header.s_magic = MESSAGE_MAGIC;
+    msg.s_header.s_type = STOP;
+    msg.s_header.s_local_time = get_physical_time();
+	msg.s_header.s_payload_len = 0;
 	
-	send_multicast(comm, msg);
-	
-	free(msg);
-	return 0;
+	send_multicast(comm, &msg);
 }
 
 /** Send TRANSFER message
@@ -175,42 +165,32 @@ int send_all_stop_msg(PipesCommunication* comm){
  * @param comm		Pointer to PipesCommunication
  * @param dst 		Destination local_id
  * @param order 	Transfer Order information
- *
- * @return -1 on sending message error, 0 on success
  */
-int send_transfer_msg(PipesCommunication* comm, local_id dst, TransferOrder* order){
-	Message* msg = malloc(sizeof(Message));
-	msg->s_header.s_magic = MESSAGE_MAGIC;
-    msg->s_header.s_type = TRANSFER;
-    msg->s_header.s_local_time = get_physical_time();
-	msg->s_header.s_payload_len = sizeof(TransferOrder);
+void send_transfer_msg(PipesCommunication* comm, local_id dst, TransferOrder* order){
+	Message msg;
+	msg.s_header.s_magic = MESSAGE_MAGIC;
+    msg.s_header.s_type = TRANSFER;
+    msg.s_header.s_local_time = get_physical_time();
+	msg.s_header.s_payload_len = sizeof(TransferOrder);
 	
-	memcpy(msg->s_payload, order, msg->s_header.s_payload_len);
+	memcpy(msg.s_payload, order, msg.s_header.s_payload_len);
 	
-	while (send(comm, dst, msg) < 0);
-	
-	free(msg);
-	return 0;
+	while (send(comm, dst, &msg) < 0);
 }
 
 /** Send ACK message
  * 
  * @param comm		Pointer to PipesCommunication
  * @param dst 		Destination local_id
- *
- * @return -1 on sending message error, 0 on success
  */
-int send_ack_msg(PipesCommunication* comm, local_id dst){
-	Message* msg = malloc(sizeof(Message));
-	msg->s_header.s_magic = MESSAGE_MAGIC;
-    msg->s_header.s_type = ACK;
-    msg->s_header.s_local_time = get_physical_time();
-	msg->s_header.s_payload_len = 0;
+void send_ack_msg(PipesCommunication* comm, local_id dst){
+	Message msg;
+	msg.s_header.s_magic = MESSAGE_MAGIC;
+    msg.s_header.s_type = ACK;
+    msg.s_header.s_local_time = get_physical_time();
+	msg.s_header.s_payload_len = 0;
 	
-	while (send(comm, dst, msg) < 0);
-	
-	free(msg);
-	return 0;
+	while (send(comm, dst, &msg) < 0);
 }
 
 /** Send Balance History
@@ -218,40 +198,33 @@ int send_ack_msg(PipesCommunication* comm, local_id dst){
  * @param comm		Pointer to PipesCommunication
  * @param dst 		Destination local_id
  * @param history	Balance History information
- *
- * @return -1 on sending message error, 0 on success
  */
-int send_balance_history(PipesCommunication* comm, local_id dst, BalanceHistory* history){
-	Message* msg = malloc(sizeof(Message));
-	msg->s_header.s_magic = MESSAGE_MAGIC;
-    msg->s_header.s_type = BALANCE_HISTORY;
-    msg->s_header.s_local_time = get_physical_time();
-	msg->s_header.s_payload_len = sizeof(BalanceHistory);
+void send_balance_history(PipesCommunication* comm, local_id dst, BalanceHistory* history){
+	Message msg;
+	msg.s_header.s_magic = MESSAGE_MAGIC;
+    msg.s_header.s_type = BALANCE_HISTORY;
+    msg.s_header.s_local_time = get_physical_time();
+	msg.s_header.s_payload_len = sizeof(BalanceHistory);
 	
-	memcpy(msg->s_payload, history, msg->s_header.s_payload_len);
+	memcpy(msg.s_payload, history, msg.s_header.s_payload_len);
 	
-	while (send(comm, dst, msg) < 0);
-	
-	free(msg);
-	return 0;
+	while (send(comm, dst, &msg) < 0);
 }
 
 /** Receive all messages
  * 
  * @param comm		Pointer to PipesCommunication
  * @param type		Message Type
- *
- * @return -1 on receiving message error, 0 on success
  */
-int receive_all_msgs(PipesCommunication* comm, MessageType type){
-	Message* msg = malloc(sizeof(Message));
+void receive_all_msgs(PipesCommunication* comm, MessageType type){
+	Message msg;
 	local_id i;
 	
 	for (i = 1; i < comm->total_ids; i++){
 		if (i == comm->current_id){
 			continue;
 		}
-		while (receive(comm, i, msg) < 0);
+		while (receive(comm, i, &msg) < 0);
 	}
 	
 	switch (type){
@@ -264,7 +237,4 @@ int receive_all_msgs(PipesCommunication* comm, MessageType type){
 		default:
 			break;
     }
-	free(msg);
-	return 0;
-
 }

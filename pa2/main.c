@@ -92,6 +92,7 @@ int main(int argc, char** argv){
 		}
 	}
 	
+	/* Finish work */
 	log_destroy();
 	communication_destroy(comm);
 	return 0;
@@ -101,32 +102,32 @@ int main(int argc, char** argv){
  *
  * @param comm		Pointer to PipesCommunication
  *
- * @return -1 & -2 on error, 0 on success.
+ * @return -1 on incorrect message type, 0 on success.
  */
 int do_parent_work(PipesCommunication* comm){
 	AllHistory all_history;
 	local_id i;
+	
+	all_history.s_history_len = comm->total_ids - 1;
 	
     receive_all_msgs(comm, STARTED);
 
     /* Payload */
     bank_robbery(comm, comm->total_ids - 1);
 
+	/* Payload ended, stop children work */
     send_all_stop_msg(comm);
     receive_all_msgs(comm, DONE);
-
-	all_history.s_history_len = comm->total_ids - 1;
 	
-	/* Receive messages from children and fill in History */
+	/* Fill in History */
 	for (i = 1; i < comm->total_ids; i++){
 		BalanceHistory balance_history;
 		Message msg;
 		
-		if (receive(comm, i, &msg)){
-			return -1;
-		}
+		while(receive(comm, i, &msg));
+		
 		if (msg.s_header.s_type != BALANCE_HISTORY){
-			return -2;
+			return -1;
 		}
 		
 		memcpy((void*)&balance_history, msg.s_payload, sizeof(char) * msg.s_header.s_payload_len);
@@ -141,12 +142,13 @@ int do_parent_work(PipesCommunication* comm){
  *
  * @param comm		Pointer to PipesCommunication
  *
- * @return -1 & -2 on error, 0 on success.
+ * @return -1 on incorrect message type, 0 on success.
  */
 int do_child_work(PipesCommunication* comm){
 	BalanceState balance_state;
     BalanceHistory balance_history;
 	size_t done_left = comm->total_ids - 2;
+	int not_stopped = 1;
 
     balance_history.s_id = comm->current_id;
 	
@@ -160,8 +162,8 @@ int do_child_work(PipesCommunication* comm){
 	send_all_proc_event_msg(comm, STARTED);
     receive_all_msgs(comm, STARTED);
 	
-	/* Receive TRANSFER or STOP messages */
-	while(1){
+	/* Receive TRANSFER, STOP or DONE messages */
+	while(done_left || not_stopped){
 		Message msg;
 		
         while (receive_any(comm, &msg));
@@ -171,24 +173,19 @@ int do_child_work(PipesCommunication* comm){
 		}
 		else if (msg.s_header.s_type == STOP){
 			send_all_proc_event_msg(comm, DONE);
-			break;
-		}
-	}
-	
-	/* Receive TRANSFER or DONE messages */
-	while(done_left){
-		Message msg;
-		
-        while (receive_any(comm, &msg));
-		
-		if (msg.s_header.s_type == TRANSFER){
-			do_transfer(comm, &msg, &balance_state, &balance_history);
+			not_stopped = 0;
 		}
 		else if (msg.s_header.s_type == DONE){
 			done_left--;
 		}
+		else{
+			return -1;
+		}
 	}
 	
+	log_received_all_done(comm->current_id);
+	
+	/* Update history and send to PARENT */
 	update_history(&balance_state, &balance_history, 0);
 	send_balance_history(comm, PARENT_ID, &balance_history);
 	return 0;
@@ -207,11 +204,13 @@ int do_transfer(PipesCommunication* comm, Message* msg, BalanceState* state, Bal
 	TransferOrder order;
 	memcpy(&order, msg->s_payload, sizeof(char) * msg->s_header.s_payload_len);
 	
+	/* Transfer request */
 	if (comm->current_id == order.s_src){
 		update_history(state, history, -order.s_amount);
 		send_transfer_msg(comm, order.s_dst, &order);
 		comm->balance -= order.s_amount;
 	}
+	/* Transfer income */
 	else if (comm->current_id == order.s_dst){
 		update_history(state, history, order.s_amount);
 		send_ack_msg(comm, PARENT_ID);

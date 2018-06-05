@@ -45,7 +45,7 @@ int receive(void * self, local_id from, Message * msg){
 		return -1;
 	}
 	/* Read Header */
-	if (read(this->pipes[GET_INDEX(from, this->current_id) * 2 + PIPE_READ_TYPE], msg, sizeof(MessageHeader)) < sizeof(MessageHeader)){
+	if (read(this->pipes[GET_INDEX(from, this->current_id) * 2 + PIPE_READ_TYPE], msg, sizeof(MessageHeader)) < (int)sizeof(MessageHeader)){
 		return -2;
 	}
 	
