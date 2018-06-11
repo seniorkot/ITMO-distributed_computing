@@ -27,6 +27,9 @@ PipesCommunication* communication_init(int* pipes, size_t proc_count, local_id c
 void communication_destroy(PipesCommunication* comm);
 
 int send_all_proc_event_msg(PipesCommunication* comm, MessageType type);
+void send_all_request_msg(PipesCommunication* comm);
+void send_all_release_msg(PipesCommunication* comm);
+void send_reply_msg(PipesCommunication* comm, local_id dst);
 
 void receive_all_msgs(PipesCommunication* comm, MessageType type);
 

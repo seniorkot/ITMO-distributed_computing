@@ -8,7 +8,7 @@
 #include "communication.h"
 #include "log4pa.h"
 #include "pa2345.h"
-#include "ltime.h"
+#include "lamport.h"
 
 #include <stdio.h>
 #include <unistd.h>
@@ -152,6 +152,49 @@ int send_all_proc_event_msg(PipesCommunication* comm, MessageType type){
 	type == STARTED ? log_started(comm->current_id) : log_done(comm->current_id);
 	
 	return 0;
+}
+
+/** Send REQUEST message to all processes
+ * 
+ * @param comm		Pointer to PipesCommunication
+ */
+void send_all_request_msg(PipesCommunication* comm){
+	Message msg;
+	msg.s_header.s_magic = MESSAGE_MAGIC;
+    msg.s_header.s_type = CS_REQUEST;
+    msg.s_header.s_local_time = get_lamport_time();
+	msg.s_header.s_payload_len = 0;
+	
+	send_multicast(comm, &msg);
+}
+
+/** Send RELEASE message to all processes
+ * 
+ * @param comm		Pointer to PipesCommunication
+ */
+void send_all_release_msg(PipesCommunication* comm){
+	Message msg;
+	msg.s_header.s_magic = MESSAGE_MAGIC;
+    msg.s_header.s_type = CS_RELEASE;
+    msg.s_header.s_local_time = get_lamport_time();
+	msg.s_header.s_payload_len = 0;
+	
+	send_multicast(comm, &msg);
+}
+
+/** Send REPLY message
+ * 
+ * @param comm		Pointer to PipesCommunication
+ * @param dst		Message destionation local id
+ */
+void send_reply_msg(PipesCommunication* comm, local_id dst){
+	Message msg;
+	msg.s_header.s_magic = MESSAGE_MAGIC;
+    msg.s_header.s_type = CS_REPLY;
+    msg.s_header.s_local_time = get_lamport_time();
+	msg.s_header.s_payload_len = 0;
+	
+	while (send(comm, dst, &msg) < 0);
 }
 
 /** Receive all messages

@@ -8,6 +8,7 @@
 #include "log4pa.h"
 #include "common.h"
 #include "pa2345.h"
+#include "lamport.h"
 
 #include <stdio.h>
 #include <unistd.h>
