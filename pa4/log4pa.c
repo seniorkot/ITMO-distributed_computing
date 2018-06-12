@@ -1,7 +1,7 @@
 /**
  * @file     log4pa.c
  * @Author   @seniorkot
- * @date     May, 2018
+ * @date     June, 2018
  * @brief    Logger functions
  */
  

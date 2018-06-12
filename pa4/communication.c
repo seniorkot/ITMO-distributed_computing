@@ -1,7 +1,7 @@
 /**
  * @file     communication.c
  * @Author   @seniorkot
- * @date     May, 2018
+ * @date     June, 2018
  * @brief    Functions that help to organize IPC
  */
  
@@ -75,14 +75,13 @@ int* pipes_init(size_t proc_count){
  *
  * @return pointer to PipesCommunication
  */
-PipesCommunication* communication_init(int* pipes, size_t proc_count, local_id curr_proc, balance_t balance){
+PipesCommunication* communication_init(int* pipes, size_t proc_count, local_id curr_proc){
 	PipesCommunication* this = malloc(sizeof(PipesCommunication));;
 	size_t i, j;
 	size_t offset = proc_count - 1;
 	this->pipes = malloc(sizeof(int) * offset * 2);
 	this->total_ids = proc_count;
 	this->current_id = curr_proc;
-	this->balance = balance;
 	
 	memcpy(this->pipes, pipes + curr_proc * 2 * offset, sizeof(int) * offset * 2);
 	

@@ -1,7 +1,7 @@
 /**
  * @file     lamport.h
  * @Author   @seniorkot
- * @date     May, 2018
+ * @date     June, 2018
  * @brief    Header file for lamport time functions
  */
 

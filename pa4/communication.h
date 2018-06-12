@@ -1,7 +1,7 @@
 /**
  * @file     communication.h
  * @Author   @seniorkot
- * @date     May, 2018
+ * @date     June, 2018
  * @brief    Header file that contains structure and functions to organize IPC
  */
 
@@ -23,7 +23,7 @@ enum PipeTypeOffset
 };
 
 int* pipes_init(size_t proc_count);
-PipesCommunication* communication_init(int* pipes, size_t proc_count, local_id curr_proc, balance_t balance);
+PipesCommunication* communication_init(int* pipes, size_t proc_count, local_id curr_proc);
 void communication_destroy(PipesCommunication* comm);
 
 int send_all_proc_event_msg(PipesCommunication* comm, MessageType type);
