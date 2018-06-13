@@ -12,8 +12,9 @@
 
 typedef struct{
 	int* pipes;
-	local_id current_id;
 	size_t total_ids;
+	local_id current_id;
+	local_id last_msg_from;
 } PipesCommunication;
 
 enum PipeTypeOffset 

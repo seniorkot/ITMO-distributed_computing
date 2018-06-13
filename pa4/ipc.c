@@ -65,6 +65,7 @@ int receive_any(void * self, Message * msg){
 		}
 		
 		if (!receive(this, i, msg)){
+			this->last_msg_from = i;
 			return 0;
 		}
 	}

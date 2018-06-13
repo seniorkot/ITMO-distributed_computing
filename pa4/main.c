@@ -15,6 +15,8 @@
 #include "log4pa.h"
 #include "communication.h"
 #include "lamport.h"
+#include "cs.h"
+#include "pa2345.h"
 
 int get_agrs(int argc, char** argv, int* processes, int* mutexl);
 
@@ -102,7 +104,27 @@ int main(int argc, char** argv){
  * @return -1 on error, 0 on success.
  */
 int do_parent_work(PipesCommunication* comm){
+	LamportQueue* queue = lamport_queue_init();
+	CS lamport_comm;
+	lamport_comm.comm = comm;
+	lamport_comm.queue = queue;
+	lamport_comm.done_left = comm->total_ids - 1;
 	
+	receive_all_msgs(comm, STARTED);
+	
+	while (lamport_comm.done_left){
+		Message msg;
+		
+		while (receive_any(comm, &msg));
+		
+		set_lamport_time_from_msg(&msg);
+		
+		cs_work(&lamport_comm, &msg);
+	}
+	log_received_all_done(comm->current_id);
+	
+	lamport_queue_destroy(queue);
+	return 0;
 }
 
 /** Do child process work
@@ -113,7 +135,48 @@ int do_parent_work(PipesCommunication* comm){
  * @return -1 on error, 0 on success.
  */
 int do_child_work(PipesCommunication* comm, int mutexl){
+	LamportQueue* queue = lamport_queue_init();
+	CS lamport_comm;
+	local_id i;
+	char buf[MAX_PAYLOAD_LEN];
 	
+	lamport_comm.comm = comm;
+	lamport_comm.queue = queue;
+	lamport_comm.done_left = comm->total_ids - 2;
+	
+	increment_lamport_time();
+	send_all_proc_event_msg(comm, STARTED);
+	
+	receive_all_msgs(comm, STARTED);
+	
+	for (i = 1; i <= comm->current_id * 5; i++){
+		if (mutexl){
+			request_cs(&lamport_comm);
+		}
+		/* Critical area */
+		snprintf(buf, MAX_PAYLOAD_LEN, log_loop_operation_fmt, comm->current_id, i, comm->current_id * 5);
+		print(buf);
+		
+		if (mutexl){
+			release_cs(&lamport_comm);
+		}
+	}
+	
+	send_all_proc_event_msg(comm, DONE);
+	
+	while (lamport_comm.done_left){
+		Message msg;
+		
+		while (receive_any(comm, &msg));
+		
+		set_lamport_time_from_msg(&msg);
+		
+		cs_work(&lamport_comm, &msg);
+	}
+	log_received_all_done(comm->current_id);
+	
+	lamport_queue_destroy(queue);
+	return 0;
 }
 
 /** Get program arguments
@@ -138,7 +201,7 @@ int get_agrs(int argc, char** argv, int* processes, int* mutexl){
 		if (res == 'p'){
 			*processes = atoi(optarg);
 		}
-		else if (res == '?'}{
+		else if (res == '?'){
 			return -1;
 		}
 	}

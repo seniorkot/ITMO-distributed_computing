@@ -42,7 +42,7 @@ void log_pipes(PipesCommunication* comm){
 	fprintf(pipes_log_f, "\n");
 }
 
-void log_started(local_id id, balance_t balance){
+void log_started(local_id id){
 	printf(log_started_fmt, get_lamport_time(), id, getpid(), getppid(), 0);
     fprintf(events_log_f, log_started_fmt, get_lamport_time(), id, getpid(), getppid(), 0);
 }
@@ -52,7 +52,7 @@ void log_received_all_started(local_id id){
     fprintf(events_log_f, log_received_all_started_fmt, get_lamport_time(), id);
 }
 
-void log_done(local_id id, balance_t balance){
+void log_done(local_id id){
 	printf(log_done_fmt, get_lamport_time(), id, 0);
     fprintf(events_log_f, log_done_fmt, get_lamport_time(), id, 0);
 }
