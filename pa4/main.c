@@ -109,13 +109,16 @@ int do_parent_work(PipesCommunication* comm){
 	lamport_comm.queue = NULL;
 	lamport_comm.done_left = comm->total_ids - 1;
 	
+	/* Receive STARTED messages from children */
 	receive_all_msgs(comm, STARTED);
 	
+	/* Receive messages: wait for all children done */
 	while (lamport_comm.done_left){
 		Message msg;
 		
 		while (receive_any(comm, &msg));
 		
+		/* Ignore REQUEST & RELEASE messages */
 		if (msg.s_header.s_type == DONE){
 			set_lamport_time_from_msg(&msg);
 			cs_work(&lamport_comm, &msg);
@@ -143,11 +146,13 @@ int do_child_work(PipesCommunication* comm, int mutexl){
 	lamport_comm.queue = queue;
 	lamport_comm.done_left = comm->total_ids - 2;
 	
+	/* Send & receive STARTED messages */
 	send_all_proc_event_msg(comm, STARTED);
-	
 	receive_all_msgs(comm, STARTED);
 	
+	/* Do process work */
 	for (i = 1; i <= comm->current_id * 5; i++){
+		/* If "--mutexl" is set, request entering critical area */
 		if (mutexl){
 			request_cs(&lamport_comm);
 		}
@@ -155,13 +160,16 @@ int do_child_work(PipesCommunication* comm, int mutexl){
 		snprintf(buf, MAX_PAYLOAD_LEN, log_loop_operation_fmt, comm->current_id, i, comm->current_id * 5);
 		print(buf);
 		
+		/* If "--mutexl" is set, notify all about exiting critical area */
 		if (mutexl){
 			release_cs(&lamport_comm);
 		}
 	}
 	
+	/* Notify all that process is done */
 	send_all_proc_event_msg(comm, DONE);
 	
+	/* Receive messages: wait for all done, reply on requests */
 	while (lamport_comm.done_left){
 		Message msg;
 		

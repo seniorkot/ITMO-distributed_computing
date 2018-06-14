@@ -34,6 +34,10 @@ int node_cmp(QueueNode* one, QueueNode* two){
 	return 0;
 }
 
+/** Init Lamport Queue
+ * 
+ * @return 	pointer to LamportQueue
+ */
 LamportQueue* lamport_queue_init(){
 	LamportQueue* queue = malloc(sizeof(LamportQueue));
 	queue->head = NULL;
@@ -41,6 +45,10 @@ LamportQueue* lamport_queue_init(){
 	return queue;
 }
 
+/** Destroy Lamport Queue
+ * 
+ * @param queue 	pointer to LamportQueue
+ */
 void lamport_queue_destroy(LamportQueue* queue){
 	if (queue->head != NULL){
 		QueueNode* node = queue->head;
@@ -53,6 +61,12 @@ void lamport_queue_destroy(LamportQueue* queue){
 	free(queue);
 }
 
+/** Insert value into queue <key, value>
+ * 
+ * @param queue 	pointer to LamportQueue
+ * @param key	 	Lamport timestamp
+ * @param value 	Process local_id
+ */
 void lamport_queue_insert(LamportQueue* queue, timestamp_t key, local_id value){
 	QueueNode* node = malloc(sizeof(QueueNode));
 	node->key = key;
@@ -93,6 +107,12 @@ void lamport_queue_insert(LamportQueue* queue, timestamp_t key, local_id value){
 	}	
 }
 
+/** Get head value from queue without deleting it
+ * 
+ * @param queue 	pointer to LamportQueue
+ *
+ * @return head value
+ */
 local_id lamport_queue_peek(LamportQueue* queue){
 	if (queue->head == NULL){
 		return -1;
@@ -100,6 +120,12 @@ local_id lamport_queue_peek(LamportQueue* queue){
 	return queue->head->value;
 }
 
+/** Get head value and delete it from queue
+ * 
+ * @param queue 	pointer to LamportQueue
+ *
+ * @return head value
+ */
 local_id lamport_queue_get(LamportQueue* queue){
 	QueueNode* tmp_head;
 	local_id retval;
