@@ -126,7 +126,7 @@ int send_all_proc_event_msg(PipesCommunication* comm, MessageType type){
 	
 	msg.s_header.s_magic = MESSAGE_MAGIC;
     msg.s_header.s_type = type;
-    msg.s_header.s_local_time = get_lamport_time();
+    msg.s_header.s_local_time = increment_lamport_time();
 	
 	switch (type){
         case STARTED:
@@ -161,7 +161,7 @@ void send_all_request_msg(PipesCommunication* comm){
 	Message msg;
 	msg.s_header.s_magic = MESSAGE_MAGIC;
     msg.s_header.s_type = CS_REQUEST;
-    msg.s_header.s_local_time = get_lamport_time();
+    msg.s_header.s_local_time = increment_lamport_time();
 	msg.s_header.s_payload_len = 0;
 	
 	send_multicast(comm, &msg);
@@ -175,7 +175,7 @@ void send_all_release_msg(PipesCommunication* comm){
 	Message msg;
 	msg.s_header.s_magic = MESSAGE_MAGIC;
     msg.s_header.s_type = CS_RELEASE;
-    msg.s_header.s_local_time = get_lamport_time();
+    msg.s_header.s_local_time = increment_lamport_time();
 	msg.s_header.s_payload_len = 0;
 	
 	send_multicast(comm, &msg);
@@ -190,7 +190,7 @@ void send_reply_msg(PipesCommunication* comm, local_id dst){
 	Message msg;
 	msg.s_header.s_magic = MESSAGE_MAGIC;
     msg.s_header.s_type = CS_REPLY;
-    msg.s_header.s_local_time = get_lamport_time();
+    msg.s_header.s_local_time = increment_lamport_time();
 	msg.s_header.s_payload_len = 0;
 	
 	while (send(comm, dst, &msg) < 0);

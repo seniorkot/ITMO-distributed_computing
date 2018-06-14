@@ -104,10 +104,9 @@ int main(int argc, char** argv){
  * @return -1 on error, 0 on success.
  */
 int do_parent_work(PipesCommunication* comm){
-	LamportQueue* queue = lamport_queue_init();
 	CS lamport_comm;
 	lamport_comm.comm = comm;
-	lamport_comm.queue = queue;
+	lamport_comm.queue = NULL;
 	lamport_comm.done_left = comm->total_ids - 1;
 	
 	receive_all_msgs(comm, STARTED);
@@ -117,13 +116,13 @@ int do_parent_work(PipesCommunication* comm){
 		
 		while (receive_any(comm, &msg));
 		
-		set_lamport_time_from_msg(&msg);
-		
-		cs_work(&lamport_comm, &msg);
+		if (msg.s_header.s_type == DONE){
+			set_lamport_time_from_msg(&msg);
+			cs_work(&lamport_comm, &msg);
+		}
 	}
-	log_received_all_done(comm->current_id);
 	
-	lamport_queue_destroy(queue);
+	log_received_all_done(comm->current_id);
 	return 0;
 }
 
@@ -144,7 +143,6 @@ int do_child_work(PipesCommunication* comm, int mutexl){
 	lamport_comm.queue = queue;
 	lamport_comm.done_left = comm->total_ids - 2;
 	
-	increment_lamport_time();
 	send_all_proc_event_msg(comm, STARTED);
 	
 	receive_all_msgs(comm, STARTED);
@@ -170,7 +168,6 @@ int do_child_work(PipesCommunication* comm, int mutexl){
 		while (receive_any(comm, &msg));
 		
 		set_lamport_time_from_msg(&msg);
-		
 		cs_work(&lamport_comm, &msg);
 	}
 	log_received_all_done(comm->current_id);

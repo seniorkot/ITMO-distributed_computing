@@ -16,7 +16,7 @@ static timestamp_t lamport_time = 0;
  * @param one
  * @param two
  *
- * @return -1 if two is greater, 1 if one is greater, 0 on equal.
+ * @return -1 if @one comes first, 1 if @two comes first, 0 on equal.
  */
 int node_cmp(QueueNode* one, QueueNode* two){
 	if (one->key < two->key){
@@ -67,19 +67,19 @@ void lamport_queue_insert(LamportQueue* queue, timestamp_t key, local_id value){
 	}
 	/* If node is greater than queue head element */
 	else if (node_cmp(node, queue->head) < 0){
-		queue->head->prev = node;
 		node->next = queue->head;
+		queue->head->prev = node;
 		queue->head = node;
 	}
 	/* If node is lower than queue tail element */
 	else if (node_cmp(node, queue->tail) > 0){
-		queue->tail->next = node;
 		node->prev = queue->tail;
+		queue->tail->next = node;
 		queue->tail = node;
 	}
 	else{
 		QueueNode* tmp_left = queue->head;		/* Tmp nodes for inserting in queue */
-		QueueNode* tmp_right = queue->tail;
+		QueueNode* tmp_right = queue->head->next;
 		
 		while(!(node_cmp(node, tmp_left) > 0 && node_cmp(node, tmp_right) < 0)){
 			tmp_left = tmp_right;
@@ -102,8 +102,8 @@ local_id lamport_queue_peek(LamportQueue* queue){
 
 local_id lamport_queue_get(LamportQueue* queue){
 	QueueNode* tmp_head;
-	local_id retval = lamport_queue_peek(queue);
-	if (retval < 0){
+	local_id retval;
+	if ((retval = lamport_queue_peek(queue)) < 0){
 		return -1;
 	}
 	
@@ -119,7 +119,8 @@ local_id lamport_queue_get(LamportQueue* queue){
 
 /* Time functions */
 timestamp_t increment_lamport_time(){
-	return ++lamport_time;
+	lamport_time++;
+	return lamport_time;
 }
 
 timestamp_t set_lamport_time(timestamp_t new_lamport_time){
@@ -131,7 +132,7 @@ timestamp_t set_lamport_time(timestamp_t new_lamport_time){
 
 timestamp_t set_lamport_time_from_msg(Message* msg){
 	set_lamport_time(msg->s_header.s_local_time);
-	return increment_lamport_time();
+	return lamport_time;
 }
 
 timestamp_t get_lamport_time(){
